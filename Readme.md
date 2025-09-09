@@ -11,6 +11,20 @@ This mini tutorial shows how to get an LLM API key, run everything with Docker, 
 
 ---
 
+## Features
+
+- Exposes a chat API: POST /chat
+- Validates requests (message required) and returns clear errors
+- Rate-limits clients (≤ 5 req/min per IP)
+- Provides Swagger docs at /docs
+- Integrates Google Gemini LLM when enabled (useLLM)
+- Optional web search grounding (useWeb): returns grounded flag + sources (URLs)
+- Includes domain (from backend LLM_DOMAIN) in every response
+- Fallback to deterministic reply if no API key or LLM fails
+- React frontend chat UI: typing indicator, auto-scroll, send on Enter, disable when empty
+- UI toggles for Gemini and web search; shows “Used web search” + linked sources
+- Runs locally (Vite + Nest) or via Docker (Nginx frontend + Nest backend)
+
 ## 1) Get your LLM API key (Google Gemini)
 
 If you want to use the LLM features and search the web, you need an API key.
@@ -54,7 +68,7 @@ Once it’s up:
 
 ---
 
-## 3) Start locally without Docker
+## 3) Start locally without Docker (Optional)
 
 ### Backend
 
