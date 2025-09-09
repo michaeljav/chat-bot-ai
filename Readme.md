@@ -2,6 +2,11 @@
 
 `docker compose up -d --build`
 
+2 Example to search online :
+-Give me two news stories about Dominican gastronomy from today and cite the sources with links.
+
+-Find me a URL about Dominican food from today.
+
 # Live-Coding Assignment (Interview Session)
 
 ## Goal
