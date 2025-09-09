@@ -1,29 +1,111 @@
-# Start everything (Backend and frontend) with Docker:
+# Quick Start — Chat Project (Backend + Frontend)
 
-`docker compose up -d --build`
+This mini tutorial shows how to get an LLM API key, run everything with Docker, or run backend and frontend locally.
 
-# Front: http://localhost:8080
+---
 
-# Swagger: http://localhost:8080/docs (o http://localhost:3000/docs si expusiste la API)
+## Prerequisites
 
-2 Example to search online :
--Give me two news stories about Dominican gastronomy from today and cite the sources with links.
+- **Docker** and **Docker Compose**
+- **Node.js** (v20.19+ recommended) and **npm** (only if running locally without Docker)
 
-# Start everything (Backend and frontend) with docker
+---
 
+## 1) Get your LLM API key (Google Gemini)
+
+If you want to use the LLM features and search the web, you need an API key.
+
+**Quick link:** https://aistudio.google.com/app/apikey
+
+**Steps:**
+
+1. Open **Google AI Studio → API Keys**: https://aistudio.google.com/app/apikey
+2. Sign in with your Google account.
+3. Click **Create API key** and copy the key.
+4. You now have your `LLM_API_KEY`.
+
+> **Tip:** Save it in your environment (e.g., `.env` for the backend or your Docker Compose env).
+
+**Example `.env` for the backend (`chat-api/.env`):**
+
+```ini
+# Required for LLM/web-search features
+LLM_API_KEY=your_gemini_api_key_here
+
+# Optional: domain/topic focus used by your model (if your app supports it)
+# LLM_DOMAIN=Dominican cuisine
+```
+
+---
+
+## 2) Start everything with Docker (recommended)
+
+From the project root (where `docker-compose.yml` lives), run:
+
+```bash
+docker compose up -d --build
+```
+
+Once it’s up:
+
+- **Frontend:** http://localhost:8080
+- **Swagger UI:** http://localhost:8080/docs  
+  _(or http://localhost:3000/docs if you exposed the API directly)_
+
+---
+
+## 3) Start locally without Docker
+
+### Backend
+
+```bash
 cd chat-api
 npm i
 npm run start:dev
+```
 
-## Frontend
+- Swagger UI will usually be at `http://localhost:3000/docs` (unless you proxy via the frontend).
 
+### Frontend
+
+In a second terminal:
+
+```bash
 cd ../chat-frontend
 npm i
 npm run dev
+```
 
-## abre http://localhost:5173
+- Open **http://localhost:5173**
 
--Find me a URL about Dominican food from today.
+---
+
+## 4) Test the app
+
+### Example prompts for online search
+
+- “Give me two news stories about Dominican gastronomy from **today**, and cite the sources with links.”
+- “Find me a URL about Dominican food from today.”
+
+> If your app has a toggle for “Use LLM” or “Search the web,” turn it on before asking.
+
+---
+
+## Troubleshooting
+
+- If a page does not load, check the container logs:
+  ```bash
+  docker compose logs -f
+  ```
+- Make sure your `LLM_API_KEY` is set in the environment used by the backend.
+- Port tips:
+  - Frontend (Docker): `8080`
+  - Frontend (dev): `5173`
+  - Backend (typical): `3000`
+
+---
+
+**End of mini tutorial** ✅
 
 # Live-Coding Assignment (Interview Session)
 

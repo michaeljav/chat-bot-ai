@@ -25,7 +25,7 @@ export class LlmService {
   private ensure() {
     if (!this.apiKey) {
       throw new BadRequestException(
-        'Missing LLM_API_KEY (or GOOGLE_API_KEY) in environment.',
+        'Missing LLM_API_KEY (or GOOGLE_API_KEY) in environment.https://aistudio.google.com/app/apikey?utm_source=chatgpt.com ',
       );
     }
     if (!this.ai) this.ai = new GoogleGenAI({ apiKey: this.apiKey });
