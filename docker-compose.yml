@@ -1,0 +1,42 @@
+services:
+  api:
+    build: ./chat-api
+    container_name: chat-api
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - '3000:3000'
+    # Healthcheck sin curl/wget usando Node (corre dentro del contenedor)
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "const http=require(''http'');const port=process.env.PORT||3000;const req=http.request({host:''127.0.0.1'',port:port,path:''/''},res=>process.exit(res.statusCode===200?0:1));req.on(''error'',()=>process.exit(1));req.end();"'
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    networks:
+      - chatnet
+    restart: unless-stopped
+
+  web:
+    build: ./chat-frontend
+    container_name: chat-frontend
+    depends_on:
+      api:
+        condition: service_healthy # <-- espera a que el backend esté healthy
+    environment:
+      # El Nginx del frontend proxa /chat → http://api:3000 (nombre del servicio)
+      - API_ORIGIN=http://api:3000
+    ports:
+      - '5173:80'
+    networks:
+      - chatnet
+    restart: unless-stopped
+
+networks:
+  chatnet:
+    driver: bridge

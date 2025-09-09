@@ -1,3 +1,7 @@
+# Start everything:
+
+`docker compose up -d --build`
+
 # Live-Coding Assignment (Interview Session)
 
 ## Goal
