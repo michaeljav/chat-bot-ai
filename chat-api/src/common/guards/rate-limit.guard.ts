@@ -19,8 +19,10 @@ export class RateLimitGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest<Request>();
-    const ip = this.getClientIp(req);
+    const path = req.path || req.url || '';
+    if (path === '/' || path.startsWith('/docs')) return true; // allow root & Swagger
 
+    const ip = this.getClientIp(req);
     const now = Date.now();
     const bucket = this.buckets.get(ip);
 
