@@ -1,27 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 type Role = 'user' | 'bot';
-
-type Message = {
-  id: string;
-  role: Role;
-  text: string;
-};
-
-type ChatRequest = { message: string };
+type Message = { id: string; role: Role; text: string };
 type ChatResponse = { reply: string };
 
-type ChatBoxProps = {
-  /** Base URL of your API, e.g., "http://localhost:3000". Defaults to same-origin. */
-  apiBase?: string;
-};
+const uid = () => Math.random().toString(36).slice(2);
 
-const makeId = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
-
-const ChatBox: React.FC<ChatBoxProps> = ({ apiBase = '' }) => {
+export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,19 +15,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({ apiBase = '' }) => {
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  // Auto-scroll to newest message or typing indicator
+  useEffect(() => inputRef.current?.focus(), []);
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, isTyping]);
 
-  const send = async () => {
+  async function send() {
     const text = input.trim();
     if (!text) {
       setError('Message cannot be empty.');
@@ -54,114 +34,129 @@ const ChatBox: React.FC<ChatBoxProps> = ({ apiBase = '' }) => {
     setIsSending(true);
     setIsTyping(true);
 
-    // Append user message
-    const userMsg: Message = { id: makeId(), role: 'user', text };
-    setMessages((prev) => [...prev, userMsg]);
-
-    // Clear & refocus input
+    // append user message
+    setMessages((m) => [...m, { id: uid(), role: 'user', text }]);
     setInput('');
     inputRef.current?.focus();
 
-    // Abort any in-flight request
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
     try {
-      const res = await fetch(`${apiBase}/chat`, {
+      const res = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text } satisfies ChatRequest),
-        signal: controller.signal
+        body: JSON.stringify({ message: text })
       });
 
-      // 400 -> inline message error
       if (res.status === 400) {
         setError('Message cannot be empty.');
-        setIsTyping(false);
         return;
       }
-
       if (!res.ok) {
         setError('Connection lost, please retry.');
-        setIsTyping(false);
         return;
       }
 
       const data = (await res.json()) as ChatResponse;
-      const botMsg: Message = { id: makeId(), role: 'bot', text: data.reply };
-      setMessages((prev) => [...prev, botMsg]);
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        setError('Connection lost, please retry.');
-      }
+      setMessages((m) => [...m, { id: uid(), role: 'bot', text: data.reply }]);
+    } catch {
+      setError('Connection lost, please retry.');
     } finally {
       setIsSending(false);
       setIsTyping(false);
     }
-  };
+  }
 
-  const onSubmit = (e: React.FormEvent) => {
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isSending) void send();
-  };
+  }
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!isSending) void send();
     }
-  };
+  }
 
   const canSend = input.trim().length > 0 && !isSending;
 
   return (
-    <div className="cbx">
+    <div className="mx-auto h-[80vh] max-w-3xl rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="border-b border-gray-200 px-4 py-3">
+        <h1 className="text-lg font-semibold">ChatBox</h1>
+        <p className="text-xs text-gray-500">
+          Bot on the left • You on the right
+        </p>
+      </div>
+
       <div
-        className="cbx-messages"
         ref={listRef}
+        className="flex h-[calc(80vh-8rem)] flex-col gap-2 overflow-y-auto bg-gray-50 p-3"
         aria-live="polite"
         aria-busy={isTyping}
       >
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`cbx-row ${m.role === 'user' ? 'is-user' : 'is-bot'}`}
+            className={`flex ${
+              m.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
           >
-            <div className="cbx-bubble">{m.text}</div>
+            <div
+              className={[
+                'max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm',
+                m.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-900 border border-gray-200'
+              ].join(' ')}
+            >
+              {m.text}
+            </div>
           </div>
         ))}
+
         {isTyping && (
-          <div className="cbx-row is-bot">
-            <div className="cbx-bubble cbx-typing">Typing…</div>
+          <div className="flex justify-start">
+            <div className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm animate-pulse">
+              Typing…
+            </div>
           </div>
         )}
       </div>
 
-      <form className="cbx-form" onSubmit={onSubmit}>
+      <form
+        onSubmit={onSubmit}
+        className="flex items-center gap-2 border-t border-gray-200 p-3"
+      >
         <input
           ref={inputRef}
-          className="cbx-input"
           type="text"
-          placeholder="Type your message…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          aria-invalid={!!error}
+          placeholder="Type your message…"
           aria-label="Message"
+          aria-invalid={!!error}
+          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/15"
         />
-        <button className="cbx-btn" type="submit" disabled={!canSend}>
+        <button
+          type="submit"
+          disabled={!canSend}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+        >
           {isSending ? 'Sending…' : 'Send'}
         </button>
       </form>
 
       {error && (
-        <div className="cbx-error" role="alert">
-          {error}
+        <div className="px-3 pb-3">
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            role="alert"
+          >
+            {error}
+          </div>
         </div>
       )}
     </div>
   );
-};
-
-export default ChatBox;
+}
