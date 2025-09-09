@@ -1,3 +1,4 @@
+// src/components/ChatBox.tsx
 import React, { useEffect, useRef, useState } from 'react';
 
 type Role = 'user' | 'bot';
@@ -22,6 +23,33 @@ export default function ChatBox() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, isTyping]);
 
+  // Extract a readable error message from any backend shape
+  async function readErrorMessage(
+    res: Response,
+    fallback = 'Connection lost, please retry.'
+  ): Promise<string> {
+    try {
+      const text = await res.text(); // read once
+      const maybeJson = (() => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      })();
+      const msg =
+        (maybeJson &&
+          (Array.isArray(maybeJson.message)
+            ? maybeJson.message[0]
+            : maybeJson.message)) ||
+        (maybeJson && maybeJson.error) ||
+        text;
+      return (msg && String(msg).trim()) || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
   async function send() {
     const text = input.trim();
     if (!text) {
@@ -34,7 +62,6 @@ export default function ChatBox() {
     setIsSending(true);
     setIsTyping(true);
 
-    // append user message
     setMessages((m) => [...m, { id: uid(), role: 'user', text }]);
     setInput('');
     inputRef.current?.focus();
@@ -46,12 +73,11 @@ export default function ChatBox() {
         body: JSON.stringify({ message: text })
       });
 
-      if (res.status === 400) {
-        setError('Message cannot be empty.');
-        return;
-      }
       if (!res.ok) {
-        setError('Connection lost, please retry.');
+        // Show server-provided message (e.g., "Rate limit exceeded. Try again in ~21s")
+        const msg = await readErrorMessage(res);
+        setError(msg);
+        setIsTyping(false);
         return;
       }
 
@@ -65,19 +91,12 @@ export default function ChatBox() {
     }
   }
 
+  const canSend = input.trim().length > 0 && !isSending;
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isSending) void send();
+    if (canSend) void send();
   }
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (!isSending) void send();
-    }
-  }
-
-  const canSend = input.trim().length > 0 && !isSending;
 
   return (
     <div className="mx-auto h-[80vh] max-w-3xl rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -116,7 +135,7 @@ export default function ChatBox() {
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm animate-pulse">
+            <div className="animate-pulse rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm">
               Typing…
             </div>
           </div>
@@ -131,8 +150,10 @@ export default function ChatBox() {
           ref={inputRef}
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKeyDown}
+          onChange={(e) => {
+            setInput(e.target.value);
+            if (error && e.target.value.trim().length > 0) setError(null);
+          }}
           placeholder="Type your message…"
           aria-label="Message"
           aria-invalid={!!error}
