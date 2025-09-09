@@ -1,0 +1,22 @@
+
+### ROOT
+GET http://localhost:3000/
+
+
+### OK
+POST http://localhost:3000/chat
+Content-Type: application/json
+
+{
+  "message": "hola"
+}
+
+### 400
+POST http://localhost:3000/chat
+Content-Type: application/json
+
+{}
+
+
+
+
