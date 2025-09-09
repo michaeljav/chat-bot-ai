@@ -121,6 +121,19 @@ npm run dev
 
 **End of mini tutorial** ✅
 
+## Images:
+**Api:**
+<img width="998" height="426" alt="image" src="https://github.com/user-attachments/assets/5617bf1a-5562-4b62-a23a-e6522244b8ca" />
+<img width="1901" height="860" alt="image" src="https://github.com/user-attachments/assets/b2bf8ab1-f48e-4003-a2cd-77ba465ccec9" />
+
+**Frontend:**
+<img width="1032" height="694" alt="image" src="https://github.com/user-attachments/assets/839c5b4e-4559-4d6b-a353-b74a0ed86388" />
+
+
+
+
+
+
 # Live-Coding Assignment (Interview Session)
 
 ## Goal
