@@ -1,4 +1,4 @@
-# Start everything:
+# Start everything (Backend and frontend):
 
 `docker compose up -d --build`
 
