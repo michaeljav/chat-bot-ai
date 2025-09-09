@@ -1,9 +1,27 @@
-# Start everything (Backend and frontend):
+# Start everything (Backend and frontend) with Docker:
 
 `docker compose up -d --build`
 
+# Front: http://localhost:8080
+
+# Swagger: http://localhost:8080/docs (o http://localhost:3000/docs si expusiste la API)
+
 2 Example to search online :
 -Give me two news stories about Dominican gastronomy from today and cite the sources with links.
+
+# Start everything (Backend and frontend) with docker
+
+cd chat-api
+npm i
+npm run start:dev
+
+## Frontend
+
+cd ../chat-frontend
+npm i
+npm run dev
+
+## abre http://localhost:5173
 
 -Find me a URL about Dominican food from today.
 

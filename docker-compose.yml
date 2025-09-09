@@ -1,42 +1,33 @@
+version: '3.9'
+
 services:
-  api:
-    build: ./chat-api
+  chat-api:
+    build:
+      context: ./chat-api
+      dockerfile: Dockerfile
     container_name: chat-api
+    env_file:
+      - ./chat-api/.env # <-- aquí pones LLM_API_KEY, LLM_MODEL, LLM_DOMAIN
     environment:
       - NODE_ENV=production
       - PORT=3000
     ports:
-      - '3000:3000'
-    # Healthcheck sin curl/wget usando Node (corre dentro del contenedor)
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'node -e "const http=require(''http'');const port=process.env.PORT||3000;const req=http.request({host:''127.0.0.1'',port:port,path:''/''},res=>process.exit(res.statusCode===200?0:1));req.on(''error'',()=>process.exit(1));req.end();"'
-        ]
-      interval: 10s
-      timeout: 3s
-      retries: 6
-      start_period: 10s
+      - '3000:3000' # opcional (útil para abrir Swagger directo)
     networks:
-      - chatnet
-    restart: unless-stopped
+      - appnet
 
-  web:
-    build: ./chat-frontend
+  chat-frontend:
+    build:
+      context: ./chat-frontend
+      dockerfile: Dockerfile
     container_name: chat-frontend
     depends_on:
-      api:
-        condition: service_healthy # <-- espera a que el backend esté healthy
-    environment:
-      # El Nginx del frontend proxa /chat → http://api:3000 (nombre del servicio)
-      - API_ORIGIN=http://api:3000
+      - chat-api
     ports:
-      - '5173:80'
+      - '8080:80' # Frontend en http://localhost:8080
     networks:
-      - chatnet
-    restart: unless-stopped
+      - appnet
 
 networks:
-  chatnet:
+  appnet:
     driver: bridge
